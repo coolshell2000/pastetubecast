@@ -44,10 +44,26 @@ def is_mpv_stopped(process_mpv):
     #     update_playlist(title="poll.. ready to load next for playing...", playlist=playlist)
     #     return True
 
+def is_url_youtube_watch(url):
+    global playlist
+    if url.startswith("https://www.youtube.com/watch") and url not in playlist and url not in playlist_done:
+        return True
+    return False
+
 def push2queue(clipboard_content):
+    global playlist
+
+    playlist = load_playlist()
+    
     str_youtube_watch_url = str(clipboard_content)
     playlist.insert(0, str_youtube_watch_url)
     msg = "append youtube url at " + str(datetime.datetime.now())
+
+    save_playlist(playlist)
+    # path_playlist_file = "playlist.txt"
+    # with open(path_playlist_file, "w") as fp:
+    #      fp.writelines("%s\n" % item for item in playlist)
+    #
     update_playlist(title=msg, playlist=playlist)
     # #subprocess.run(["/mnt/nfs/nethome/bt/youtube_cast.bash", "pi", "192.168.0.18", str_youtube_watch_url])
     # if len(sys.argv)==2:
@@ -55,18 +71,37 @@ def push2queue(clipboard_content):
     # else:
     #     subprocess.run(["/mnt/nfs/nethome/bt/youtube_cast.bash", "pi", "192.168.0.18", str_youtube_watch_url])
 
+def save_playlist(playlist):
+    path_playlist_file = "playlist.txt"
+    with open(path_playlist_file, "w") as fp:
+         fp.writelines("%s\n" % item for item in playlist)
+
+def load_playlist():
+    playlist=[]
+    path_playlist_file="playlist.txt"
+    if path.exists(path_playlist_file):
+        with open(path_playlist_file, "r") as fp:
+            playlist = list(line for line in (l.strip() for l in fp) if line)  # Non-blank lines
+            # playlist = fp.readlines()
+            print ("ok loaded {} items from playlist file {}".format(len(playlist), path_playlist_file))
+            print("playlist:{}".format(playlist))
+    return playlist
 
 
 def mpv_play(mode="l"):
+    global playlist
     if len(playlist) > 0 and status_playing == False:
         if mode == "l":
             playlist_current_item = playlist.pop(-1)
         else:
             playlist_current_item = playlist.pop(0)
+        save_playlist(playlist)
+
         process_mpv = subprocess.Popen(["/mnt/nfs/nethome/bt/youtube_cast.bash", "pi", "p41", playlist_current_item, "--fullscreen --screen=1"], stdout=subprocess.PIPE, shell=False)
         #process_mpv = subprocess.Popen(["/mnt/nfs/nethome/bt/youtube_cast.bash", "pi", "p41", playlist_current_item], stdout=subprocess.PIPE, shell=False)
         output, err = process_mpv.communicate()
         playlist_done.append(playlist_current_item)
+
         update_playlist(
             title="   poll.. playing.. pid:{} {}".format(process_mpv.pid, playlist_current_item.split("watch?v=")[-1]),
             playlist=playlist,
@@ -74,11 +109,6 @@ def mpv_play(mode="l"):
     else:
         update_playlist(title="playing or empty playlist! pls wait or add more through url copy", playlist=playlist)
 
-
-def is_url_youtube_watch(url):
-    if url.startswith("https://www.youtube.com/watch") and url not in playlist and url not in playlist_done:
-        return True
-    return False
 
 
 
@@ -138,6 +168,10 @@ class Mpvfeeder(threading.Thread):
             time.sleep(self._pause)
 
 
+
+import os.path
+from os import path
+
 def main():
     fd = sys.stdin.fileno()
 
@@ -160,12 +194,18 @@ def main():
     mpv.start()
     print("\nthread Mpvfeeder started.. Waiting to play from queue...")
 
+    global playlist
+
+    playlist = load_playlist()
+
+
     curses.initscr()
+
+
 
     try:
         count = 0
         while 1:
-            #sys.stdout.flush()
             time.sleep(0.2)
             count = count + 1
             #print(".")
