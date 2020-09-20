@@ -10,7 +10,7 @@ if [[ -z $VAR_LOCAL_DISPLAY ]]; then
   echo "attempt to play locally.."
   mpv $VAR_URL $VAR_OPTION> /dev/null 2>&1
 else
-  echo "play it remotely.."
+  echo "play it remotely at $VAR_USER@$VAR_HOST .."
   #ssh $VAR_USER@$VAR_HOST "pkill mpv ;sleep 0.1; export DISPLAY=:0 ; mpv $VAR_URL $VAR_OPTION> /dev/null 2>&1 &"
   ssh $VAR_USER@$VAR_HOST "pkill mpv ;sleep 0.1; export DISPLAY=:0 ; mpv $VAR_URL $VAR_OPTION> /dev/null 2>&1"
 fi
