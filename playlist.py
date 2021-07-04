@@ -97,7 +97,7 @@ def mpv_play(mode="l"):
             playlist_current_item = playlist.pop(0)
         save_playlist(playlist)
 
-        process_mpv = subprocess.Popen(["/mnt/nfs/nethome/bt/youtube_cast.bash", "pi", "p41", playlist_current_item, "--fullscreen --screen=1"], stdout=subprocess.PIPE, shell=False)
+        process_mpv = subprocess.Popen(["./youtube_cast.bash", "pi", "p41", playlist_current_item, "--fullscreen --screen=1"], stdout=subprocess.PIPE, shell=False)
         #process_mpv = subprocess.Popen(["/mnt/nfs/nethome/bt/youtube_cast.bash", "pi", "p41", playlist_current_item], stdout=subprocess.PIPE, shell=False)
         output, err = process_mpv.communicate()
         playlist_done.append(playlist_current_item)
