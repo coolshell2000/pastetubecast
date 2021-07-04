@@ -1,0 +1,4 @@
+sudo pip install xsel
+pip install pyperclip
+cd ~/Project/pastetubecast
+python3 playlist.py
